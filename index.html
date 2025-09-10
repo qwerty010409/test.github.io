@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <title>애니메이션 달력</title>
+  <title>이벤트 달력</title>
   <style>
     body {
       font-family: "Noto Sans KR", Arial, sans-serif;
@@ -12,6 +12,7 @@
       align-items: center;
       height: 100vh;
       margin: 0;
+      flex-direction: column;
     }
     .calendar {
       width: 380px;
@@ -19,6 +20,7 @@
       border-radius: 16px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.15);
       padding: 20px;
+      margin-bottom: 20px;
     }
     .header {
       display: flex;
@@ -72,7 +74,6 @@
       color: white;
       font-weight: bold;
     }
-    /* 클릭 시 흰색 → 초록색으로 애니메이션 */
     .selected {
       background: linear-gradient(135deg, #ffffff, #10b981);
       color: white;
@@ -80,25 +81,27 @@
       animation: selectAnim 0.5s forwards;
     }
     @keyframes selectAnim {
-      0% {
-        background: #ffffff;
-        color: #333;
-      }
-      100% {
-        background: #10b981;
-        color: #fff;
-      }
+      0% { background: #ffffff; color: #333; }
+      100% { background: #10b981; color: #fff; }
     }
-    .sunday {
-      color: #e11d48;
+    .sunday { color: #e11d48; }
+    .saturday { color: #2563eb; }
+
+    /* 이벤트 날짜 표시 (노란색 배경) */
+    .event {
+      background: #facc15 !important;
+      color: #000 !important;
+      font-weight: bold;
     }
-    .saturday {
-      color: #2563eb;
+
+    #eventInfo {
+      font-size: 16px;
+      font-weight: bold;
+      color: #333;
     }
+
     @media (max-width: 420px) {
-      .calendar {
-        width: 95%;
-      }
+      .calendar { width: 95%; }
     }
   </style>
 </head>
@@ -116,11 +119,26 @@
     <div class="dates" id="dates"></div>
   </div>
 
+  <div id="eventInfo">날짜를 선택하세요.</div>
+
   <script>
     const monthYear = document.getElementById("monthYear");
     const dates = document.getElementById("dates");
+    const eventInfo = document.getElementById("eventInfo");
     let viewDate = new Date();
     let selectedDate = null;
+
+    // 이벤트 데이터 (yyyy-mm-dd: 내용)
+    const events = {
+      "2025-09-01": "중간고사",
+      "2025-09-02": "중간고사",
+      "2025-09-29": "중간고사",
+      "2025-09-30": "중간고사"
+    };
+
+    function formatDate(year, month, day) {
+      return `${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+    }
 
     function renderCalendar() {
       dates.innerHTML = "";
@@ -142,11 +160,14 @@
         date.textContent = d;
 
         const current = new Date(year, month, d);
+        const key = formatDate(year, month, d);
 
+        // 오늘
         if(d === today.getDate() && month === today.getMonth() && year === today.getFullYear()){
           date.classList.add("today");
         }
 
+        // 선택된 날짜
         if(selectedDate &&
            d === selectedDate.getDate() &&
            month === selectedDate.getMonth() &&
@@ -154,12 +175,24 @@
           date.classList.add("selected");
         }
 
+        // 이벤트 표시
+        if(events[key]){
+          date.classList.add("event");
+        }
+
+        // 요일 색상
         if(current.getDay() === 0) date.classList.add("sunday");
         if(current.getDay() === 6) date.classList.add("saturday");
 
+        // 클릭 이벤트
         date.addEventListener("click", () => {
           selectedDate = current;
           renderCalendar();
+          if(events[key]){
+            eventInfo.textContent = `${key} → ${events[key]}`;
+          } else {
+            eventInfo.textContent = `${key}에는 일정이 없습니다.`;
+          }
         });
 
         dates.appendChild(date);
