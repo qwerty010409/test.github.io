@@ -1,331 +1,122 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
   <title>심플 달력</title>
   <style>
-    :root{
-      --bg:#f7fafc;
-      --card:#ffffff;
-      --accent:#2b6cb0;
-      --muted:#6b7280;
-      --today:#ffe58a;
-      --selected:#2b6cb0;
-      --selected-text:#fff;
-      font-family: "Apple SD Gothic Neo", "Noto Sans KR", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #f9f9f9;
     }
-
-    body{
-      margin:0;
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:linear-gradient(180deg,#eef2f7 0%, #f7fafc 100%);
-      padding:24px;
-    }
-
     .calendar {
-      width:340px;
-      background:var(--card);
-      border-radius:12px;
-      box-shadow:0 8px 24px rgba(15,23,42,0.08);
-      padding:18px;
+      width: 300px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
-
     .header {
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-weight: bold;
     }
-
-    .month {
-      display:flex;
-      align-items:center;
-      gap:12px;
-      font-weight:700;
-      font-size:16px;
-      color:#111827;
+    .days, .dates {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
     }
-
-    .nav {
-      display:flex;
-      gap:8px;
+    .days div {
+      font-size: 14px;
+      color: #666;
+      padding: 4px 0;
     }
-    button.icon {
-      border:0;
-      background:transparent;
-      padding:6px 8px;
-      border-radius:8px;
-      cursor:pointer;
-      font-size:16px;
+    .dates div {
+      padding: 8px 0;
+      cursor: pointer;
     }
-    button.icon:hover { background:#f1f5f9; }
-
-    .weekdays {
-      display:grid;
-      grid-template-columns:repeat(7,1fr);
-      text-align:center;
-      font-size:13px;
-      color:var(--muted);
-      margin-bottom:8px;
+    .today {
+      background: #007bff;
+      color: white;
+      border-radius: 50%;
     }
-
-    .grid {
-      display:grid;
-      grid-template-columns:repeat(7,1fr);
-      gap:6px;
-    }
-
-    .cell {
-      height:44px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border-radius:8px;
-      cursor:pointer;
-      user-select:none;
-      font-weight:600;
-      color:#111827;
-    }
-
-    .cell.empty { background:transparent; cursor:default; font-weight:400; color:transparent; }
-
-    .cell:hover:not(.empty):not(.selected) { background:#f8fafc; }
-
-    .cell.today {
-      background: linear-gradient(180deg, rgba(255,245,208,0.9), rgba(255,238,128,0.85));
-    }
-
-    .cell.selected {
-      background:var(--selected);
-      color:var(--selected-text);
-      box-shadow:0 6px 14px rgba(43,108,176,0.22);
-    }
-
-    .footer {
-      margin-top:12px;
-      font-size:13px;
-      color:var(--muted);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-    }
-
-    .clear-btn {
-      background:transparent;
-      border:1px solid #e6eef8;
-      padding:6px 10px;
-      border-radius:8px;
-      cursor:pointer;
-      font-size:13px;
-    }
-
-    /* responsive */
-    @media (max-width:380px){
-      .calendar { width:100%; padding:14px; }
+    button {
+      border: none;
+      background: none;
+      font-size: 16px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div class="calendar" role="application" aria-label="달력">
+  <div class="calendar">
     <div class="header">
-      <div class="month" id="monthLabel" aria-live="polite">2025년 9월</div>
-      <div class="nav">
-        <button class="icon" id="prevBtn" title="이전 달" aria-label="이전 달">◀</button>
-        <button class="icon" id="nextBtn" title="다음 달" aria-label="다음 달">▶</button>
-      </div>
+      <button id="prev">◀</button>
+      <div id="monthYear"></div>
+      <button id="next">▶</button>
     </div>
-
-    <div class="weekdays" id="weekdays">
-      <!-- 요일 표시 (JS에서 채움) -->
+    <div class="days">
+      <div>일</div><div>월</div><div>화</div><div>수</div>
+      <div>목</div><div>금</div><div>토</div>
     </div>
-
-    <div class="grid" id="dateGrid" role="grid" aria-label="달력 날짜">
-      <!-- 날짜 셀 (JS에서 채움) -->
-    </div>
-
-    <div class="footer">
-      <div id="selectedInfo">선택된 날짜: 없음</div>
-      <div>
-        <button class="clear-btn" id="todayBtn">오늘</button>
-      </div>
-    </div>
+    <div class="dates" id="dates"></div>
   </div>
 
   <script>
-    // 로케일 및 요일 (한국어)
-    const WEEKDAYS_KR = ["일","월","화","수","목","금","토"];
+    const monthYear = document.getElementById("monthYear");
+    const dates = document.getElementById("dates");
+    let viewDate = new Date();
 
-    // 달력 상태
-    let viewDate = new Date(); // 표시 기준 (연/월)
-    let selectedDate = null;
+    function renderCalendar() {
+      dates.innerHTML = "";
+      const year = viewDate.getFullYear();
+      const month = viewDate.getMonth();
 
-    const monthLabel = document.getElementById('monthLabel');
-    const weekdaysEl = document.getElementById('weekdays');
-    const grid = document.getElementById('dateGrid');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const selectedInfo = document.getElementById('selectedInfo');
-    const todayBtn = document.getElementById('todayBtn');
+      // 제목
+      monthYear.textContent = `${year}년 ${month+1}월`;
 
-    // 요일 헤더 채우기
-    function renderWeekdays(){
-      weekdaysEl.innerHTML = '';
-      for(let d=0; d<7; d++){
-        const w = document.createElement('div');
-        w.textContent = WEEKDAYS_KR[d];
-        w.setAttribute('aria-hidden','true');
-        weekdaysEl.appendChild(w);
-      }
-    }
+      // 이번 달 시작 요일, 총 날짜
+      const firstDay = new Date(year, month, 1).getDay();
+      const lastDate = new Date(year, month+1, 0).getDate();
 
-    function startOfMonth(date){
-      return new Date(date.getFullYear(), date.getMonth(), 1);
-    }
-    function daysInMonth(date){
-      return new Date(date.getFullYear(), date.getMonth()+1, 0).getDate();
-    }
-
-    function updateHeader(){
-      const y = viewDate.getFullYear();
-      const m = viewDate.getMonth() + 1;
-      monthLabel.textContent = `${y}년 ${m}월`;
-    }
-
-    function formatKR(date){
-      const y = date.getFullYear();
-      const m = String(date.getMonth()+1).padStart(2,'0');
-      const d = String(date.getDate()).padStart(2,'0');
-      return `${y}-${m}-${d}`;
-    }
-
-    // 달력 렌더
-    function renderCalendar(){
-      grid.innerHTML = '';
-      updateHeader();
-
-      const first = startOfMonth(viewDate);
-      const offset = first.getDay(); // 0=일 ... 6=토
-      const total = daysInMonth(viewDate);
-
-      // 빈칸 채우기
-      for(let i=0;i<offset;i++){
-        const empty = document.createElement('div');
-        empty.className = 'cell empty';
-        empty.setAttribute('aria-hidden','true');
-        grid.appendChild(empty);
+      // 빈 칸
+      for(let i=0;i<firstDay;i++){
+        dates.innerHTML += "<div></div>";
       }
 
+      // 날짜 출력
       const today = new Date();
-      const todayKey = formatKR(today);
+      for(let d=1; d<=lastDate; d++){
+        const date = document.createElement("div");
+        date.textContent = d;
 
-      for(let day=1; day<=total; day++){
-        const d = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
-        const key = formatKR(d);
-
-        const cell = document.createElement('button');
-        cell.type = 'button';
-        cell.className = 'cell';
-        cell.textContent = day;
-        cell.dataset.date = key;
-        cell.setAttribute('aria-label', `${d.getFullYear()}년 ${d.getMonth()+1}월 ${day}일`);
-        cell.onclick = () => {
-          selectDate(key);
-        };
-
-        // 오늘 강조
-        if(key === todayKey){
-          cell.classList.add('today');
+        if(d === today.getDate() && 
+           month === today.getMonth() && 
+           year === today.getFullYear()){
+          date.classList.add("today");
         }
 
-        // 이전/선택 표시
-        if(selectedDate && key === selectedDate){
-          cell.classList.add('selected');
-        }
-
-        grid.appendChild(cell);
+        dates.appendChild(date);
       }
     }
 
-    function selectDate(isoDate){
-      // 선택 상태 갱신
-      selectedDate = isoDate;
-      // 셀들 리프레시 (간단)
-      const cells = grid.querySelectorAll('.cell');
-      cells.forEach(c => {
-        if(c.dataset.date === isoDate){
-          c.classList.add('selected');
-        } else {
-          c.classList.remove('selected');
-        }
-      });
-
-      const d = new Date(isoDate);
-      selectedInfo.textContent = `선택된 날짜: ${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
-    }
-
-    // 이동 함수
-    function prevMonth(){
-      viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth()-1, 1);
+    document.getElementById("prev").onclick = () => {
+      viewDate.setMonth(viewDate.getMonth()-1);
       renderCalendar();
-    }
-    function nextMonth(){
-      viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth()+1, 1);
+    };
+    document.getElementById("next").onclick = () => {
+      viewDate.setMonth(viewDate.getMonth()+1);
       renderCalendar();
-    }
-
-    // 오늘로 이동(달 열고 선택)
-    function goToday(){
-      const t = new Date();
-      viewDate = new Date(t.getFullYear(), t.getMonth(), 1);
-      selectedDate = formatKR(t);
-      renderCalendar();
-      // set selected label
-      const d = t;
-      selectedInfo.textContent = `선택된 날짜: ${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
-      // highlight selected cell (renderCalendar already sets today class, but ensure selected class):
-      const cell = Array.from(grid.querySelectorAll('.cell')).find(c => c.dataset.date === selectedDate);
-      if(cell) cell.classList.add('selected');
-    }
-
-    // 키보드 단축키(←,→로 달 이동, Enter로 오늘)
-    document.addEventListener('keydown', (e)=>{
-      if(e.key === 'ArrowLeft') prevMonth();
-      if(e.key === 'ArrowRight') nextMonth();
-      if(e.key === 't' || e.key === 'T') goToday();
-    });
-
-    // 버튼 연결
-    prevBtn.addEventListener('click', prevMonth);
-    nextBtn.addEventListener('click', nextMonth);
-    todayBtn.addEventListener('click', goToday);
-
-    // 초깃값 렌더
-    renderWeekdays();
-    renderCalendar();
-
-    // optional: 외부에서 이벤트 등록 가능하도록 (예: 특정 날짜에 점 표시 등)
-    // 사용 예시: window.markDates(['2025-09-10','2025-09-21']);
-    window.markDates = function(isoArray){
-      const cells = grid.querySelectorAll('.cell');
-      cells.forEach(c => {
-        if(isoArray.includes(c.dataset.date)){
-          // 작은 점을 추가
-          if(!c.querySelector('.dot')){
-            const dot = document.createElement('div');
-            dot.className = 'dot';
-            dot.style.cssText = 'position:absolute;bottom:6px;width:6px;height:6px;border-radius:50%;background:#ef4444';
-            c.style.position='relative';
-            c.appendChild(dot);
-          }
-        }
-      });
     };
 
+    renderCalendar();
   </script>
 </body>
 </html>
