@@ -2,31 +2,48 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <title>심플 달력</title>
+  <title>고퀄리티 달력</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: "Noto Sans KR", Arial, sans-serif;
+      background: linear-gradient(135deg, #e0f2ff, #f9f9ff);
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
       margin: 0;
-      background: #f9f9f9;
     }
     .calendar {
-      width: 300px;
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 16px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      width: 380px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      padding: 20px;
     }
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
-      font-weight: bold;
+      margin-bottom: 16px;
+    }
+    .header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: #333;
+    }
+    .nav-btn {
+      border: none;
+      background: #f1f5f9;
+      color: #333;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.2s;
+    }
+    .nav-btn:hover {
+      background: #e2e8f0;
     }
     .days, .dates {
       display: grid;
@@ -35,36 +52,54 @@
     }
     .days div {
       font-size: 14px;
+      font-weight: 600;
       color: #666;
-      padding: 4px 0;
+      padding: 8px 0;
     }
     .dates div {
-      padding: 8px 0;
+      padding: 12px 0;
+      font-size: 15px;
+      border-radius: 50%;
       cursor: pointer;
+      transition: 0.2s;
+      position: relative;
+    }
+    .dates div:hover {
+      background: #f1f5f9;
     }
     .today {
       background: #007bff;
       color: white;
-      border-radius: 50%;
+      font-weight: bold;
     }
-    button {
-      border: none;
-      background: none;
-      font-size: 16px;
-      cursor: pointer;
+    .selected {
+      background: #10b981;
+      color: white;
+      font-weight: bold;
+    }
+    .sunday {
+      color: #e11d48;
+    }
+    .saturday {
+      color: #2563eb;
+    }
+    @media (max-width: 420px) {
+      .calendar {
+        width: 95%;
+      }
     }
   </style>
 </head>
 <body>
   <div class="calendar">
     <div class="header">
-      <button id="prev">◀</button>
-      <div id="monthYear"></div>
-      <button id="next">▶</button>
+      <button class="nav-btn" id="prev">◀</button>
+      <h2 id="monthYear">2025년 9월</h2>
+      <button class="nav-btn" id="next">▶</button>
     </div>
     <div class="days">
-      <div>일</div><div>월</div><div>화</div><div>수</div>
-      <div>목</div><div>금</div><div>토</div>
+      <div class="sunday">일</div><div>월</div><div>화</div>
+      <div>수</div><div>목</div><div>금</div><div class="saturday">토</div>
     </div>
     <div class="dates" id="dates"></div>
   </div>
@@ -73,35 +108,53 @@
     const monthYear = document.getElementById("monthYear");
     const dates = document.getElementById("dates");
     let viewDate = new Date();
+    let selectedDate = null;
 
     function renderCalendar() {
       dates.innerHTML = "";
       const year = viewDate.getFullYear();
       const month = viewDate.getMonth();
 
-      // 제목
+      // 상단 제목
       monthYear.textContent = `${year}년 ${month+1}월`;
 
-      // 이번 달 시작 요일, 총 날짜
       const firstDay = new Date(year, month, 1).getDay();
       const lastDate = new Date(year, month+1, 0).getDate();
 
-      // 빈 칸
+      // 앞 공백
       for(let i=0;i<firstDay;i++){
         dates.innerHTML += "<div></div>";
       }
 
-      // 날짜 출력
       const today = new Date();
       for(let d=1; d<=lastDate; d++){
         const date = document.createElement("div");
         date.textContent = d;
 
-        if(d === today.getDate() && 
-           month === today.getMonth() && 
-           year === today.getFullYear()){
+        const current = new Date(year, month, d);
+
+        // 오늘 표시
+        if(d === today.getDate() && month === today.getMonth() && year === today.getFullYear()){
           date.classList.add("today");
         }
+
+        // 선택된 날짜 표시
+        if(selectedDate &&
+           d === selectedDate.getDate() &&
+           month === selectedDate.getMonth() &&
+           year === selectedDate.getFullYear()){
+          date.classList.add("selected");
+        }
+
+        // 요일별 색상
+        if(current.getDay() === 0) date.classList.add("sunday");
+        if(current.getDay() === 6) date.classList.add("saturday");
+
+        // 날짜 클릭
+        date.addEventListener("click", () => {
+          selectedDate = current;
+          renderCalendar();
+        });
 
         dates.appendChild(date);
       }
