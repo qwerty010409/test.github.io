@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <title>고퀄리티 달력</title>
+  <title>애니메이션 달력</title>
   <style>
     body {
       font-family: "Noto Sans KR", Arial, sans-serif;
@@ -61,8 +61,8 @@
       font-size: 15px;
       border-radius: 50%;
       cursor: pointer;
-      transition: 0.2s;
       position: relative;
+      transition: background 0.4s ease, color 0.4s ease;
     }
     .dates div:hover {
       background: #f1f5f9;
@@ -72,10 +72,22 @@
       color: white;
       font-weight: bold;
     }
+    /* 클릭 시 흰색 → 초록색으로 애니메이션 */
     .selected {
-      background: #10b981;
+      background: linear-gradient(135deg, #ffffff, #10b981);
       color: white;
       font-weight: bold;
+      animation: selectAnim 0.5s forwards;
+    }
+    @keyframes selectAnim {
+      0% {
+        background: #ffffff;
+        color: #333;
+      }
+      100% {
+        background: #10b981;
+        color: #fff;
+      }
     }
     .sunday {
       color: #e11d48;
@@ -115,13 +127,11 @@
       const year = viewDate.getFullYear();
       const month = viewDate.getMonth();
 
-      // 상단 제목
       monthYear.textContent = `${year}년 ${month+1}월`;
 
       const firstDay = new Date(year, month, 1).getDay();
       const lastDate = new Date(year, month+1, 0).getDate();
 
-      // 앞 공백
       for(let i=0;i<firstDay;i++){
         dates.innerHTML += "<div></div>";
       }
@@ -133,12 +143,10 @@
 
         const current = new Date(year, month, d);
 
-        // 오늘 표시
         if(d === today.getDate() && month === today.getMonth() && year === today.getFullYear()){
           date.classList.add("today");
         }
 
-        // 선택된 날짜 표시
         if(selectedDate &&
            d === selectedDate.getDate() &&
            month === selectedDate.getMonth() &&
@@ -146,11 +154,9 @@
           date.classList.add("selected");
         }
 
-        // 요일별 색상
         if(current.getDay() === 0) date.classList.add("sunday");
         if(current.getDay() === 6) date.classList.add("saturday");
 
-        // 날짜 클릭
         date.addEventListener("click", () => {
           selectedDate = current;
           renderCalendar();
