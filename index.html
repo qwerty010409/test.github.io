@@ -8,11 +8,13 @@
       font-family: "Noto Sans KR", Arial, sans-serif;
       background: linear-gradient(135deg, #e0f2ff, #f9f9ff);
       display: flex;
-      justify-content: center;
+      justify-content: flex-start; /* 위쪽 정렬 */
       align-items: center;
       height: 100vh;
       margin: 0;
       flex-direction: column;
+      padding-top: 40px; /* 위쪽 여백 */
+      box-sizing: border-box;
     }
     .calendar {
       width: 380px;
@@ -128,7 +130,7 @@
     let viewDate = new Date();
     let selectedDate = null;
 
-    // 이벤트 데이터 (yyyy-mm-dd: 내용)
+    // 이벤트 데이터
     const events = {
       "2025-09-29": "중간고사",
       "2025-09-30": "중간고사",
